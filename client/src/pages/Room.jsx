@@ -9,14 +9,36 @@ function Room() {
     console.log(`Email is ${email} joined room`);
 
     setRemoteSocketId(id);
-  });
+  }, []);
+  const handleIncomingCall = useCallback(
+    async ({ from, offer }) => {
+      setRemoteSocketId(from);
+      const stream = await navigator.mediaDevices.getUserMedia({
+        audio: true,
+        video: true,
+      });
+      setMyStream(stream);
+
+      const ans = await peer.getAnswer(offer);
+      console.log(`from, offer ko console ho yo ${offer} ${from} `);
+      socket.emit("call-accepted", { to: from, ans });
+    },
+    [socket]
+  );
+  const handleCallAccepted = useCallback(({ from, ans }) => {
+    peer.setLocalDescription(ans);
+    console.log("call accepted");
+  }, []);
   useEffect(() => {
     socket.on("user-joined", handleUserJoined);
-
+    socket.on("incoming-call", handleIncomingCall);
+    socket.on("call-accepted", handleCallAccepted);
     return () => {
       socket.off("user-joined", handleUserJoined);
+      socket.off("incoming-call", handleIncomingCall);
+      socket.off("call-accepted", handleCallAccepted);
     };
-  }, [socket, handleUserJoined]);
+  }, [socket, handleUserJoined, handleIncomingCall, handleCallAccepted]);
   const [myStream, setMyStream] = useState();
   const handleUserCall = useCallback(async () => {
     const stream = await navigator.mediaDevices.getUserMedia({
@@ -33,26 +55,26 @@ function Room() {
       <h1>
         {remoteSocketID ? "connected" : "No one is in room wait madi brother"}
       </h1>
-      <h3>
-        {remoteSocketID && (
-          <button
-            onClick={handleUserCall}
-            className="border-2 bg-black text-white w-24"
-          >
-            Call
-          </button>
-        )}
-        <h1>Your video</h1>
-        {myStream && (
-          <ReactPlayer
-            playing
-            muted
-            height="300px"
-            width="500px"
-            url={myStream}
-          />
-        )}
-      </h3>
+
+      {remoteSocketID && (
+        <button
+          onClick={handleUserCall}
+          className="border-2 bg-black text-white w-24"
+        >
+          Call
+        </button>
+      )}
+
+      <h1>Your video</h1>
+      {myStream && (
+        <ReactPlayer
+          playing
+          muted
+          height="300px"
+          width="500px"
+          url={myStream}
+        />
+      )}
     </div>
   );
 }
