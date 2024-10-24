@@ -1,16 +1,24 @@
-import { useCallback, useState } from "react";
+import { useCallback, useEffect, useState } from "react";
+import { useSocket } from "../contextSocket/SocketProvider";
 
 function Lobby() {
   const [email, setEmail] = useState("");
   const [room, setRoom] = useState("");
+  const socket = useSocket();
   const handleSubmit = useCallback(
     (e) => {
       e.preventDefault();
+      socket.emit("room-join", { email, room });
+
       console.log({ room, email });
     },
-    [email, room]
+    [email, room, socket]
   );
-
+  useEffect(() => {
+    socket.on("room-join", (arg) => {
+      console.log(arg);
+    });
+  });
   return (
     <div className="flex flex-col items-center mt-5 justify-center min-h-screen">
       <h1 className="text-black text-center text-2xl font-bold">Lobby</h1>

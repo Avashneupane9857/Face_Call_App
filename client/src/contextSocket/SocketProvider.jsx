@@ -1,11 +1,11 @@
 /* eslint-disable react/prop-types */
-import { createContext, useMemo } from "react";
-import io from 'socket.io-client';
+import { createContext, useContext, useMemo } from "react";
+import io from "socket.io-client";
 
 const SocketContext = createContext(null);
 
 export const useSocket = () => {
-  const socket = useSocket(SocketContext);
+  const socket = useContext(SocketContext);
   return socket;
 };
 export default function SocketProvider(props) {
