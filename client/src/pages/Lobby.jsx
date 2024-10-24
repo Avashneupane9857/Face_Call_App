@@ -1,10 +1,12 @@
 import { useCallback, useEffect, useState } from "react";
 import { useSocket } from "../contextSocket/SocketProvider";
+import { useNavigate } from "react-router-dom";
 
 function Lobby() {
   const [email, setEmail] = useState("");
   const [room, setRoom] = useState("");
   const socket = useSocket();
+  const navigate = useNavigate();
   const handleSubmit = useCallback(
     (e) => {
       e.preventDefault();
@@ -14,11 +16,20 @@ function Lobby() {
     },
     [email, room, socket]
   );
+  const handleJoinRoom = useCallback(
+    (arg) => {
+      const { email, room } = arg;
+      navigate(`/room/${room}`);
+    },
+    [navigate]
+  );
+
   useEffect(() => {
-    socket.on("room-join", (arg) => {
-      console.log(arg);
-    });
-  });
+    socket.on("room-join", handleJoinRoom);
+    return () => {
+      socket.off("room-join", handleJoinRoom);
+    };
+  }, [socket, handleJoinRoom]);
   return (
     <div className="flex flex-col items-center mt-5 justify-center min-h-screen">
       <h1 className="text-black text-center text-2xl font-bold">Lobby</h1>
